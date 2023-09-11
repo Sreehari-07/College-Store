@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% block title %}Sign In to Your Account{% endblock %}
+
+{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Details</title>
+    <!-- Add Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Add custom styles here */
+         body {
+            font-family: Arial, sans-serif;
+            background-image: url("{% static 'reg3.png' %}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #formContainer {
+            margin: 0 auto;
+            max-width: 500px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        select {
+            height: 40px;
+        }
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .btn-primary {
+            width: 100%;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        #confirmationMessage {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #logoutButton {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #logoutButton:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+
+
+    <div class="container">
+        <h1>Order Details</h1>
+        <button id="showFormButton" class="btn btn-primary">Show Form</button>
+        <div id="formContainer" style="display: none;">
+            <form method="post" id="orderForm">
+                {% csrf_token %}
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+
+                <label for="dob">Date of Birth:</label>
+                <input type="date" id="dob" name="dob" required>
+
+                <label for="age">Age:</label>
+                <input type="number" id="age" name="age" required>
+
+                <label for="gender">Gender:</label>
+                <select id="gender" name="gender" required>
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                    <option value="O">Other</option>
+                </select>
+
+                <label for="phone">Phone Number:</label>
+                <input type="text" id="phone" name="phone" required>
+
+                <label for="email">Mail ID:</label>
+                <input type="email" id="email" name="email" required>
+
+                <label for="address">Address:</label>
+                <textarea id="address" name="address" rows="4" required></textarea>
+
+                <label for="department">Department:</label>
+                <select id="department" name="department" required>
+                    <option value="">Select Department</option>
+                    {% for department in departments %}
+                        <option value="{{ department.id }}">{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="course">Courses:</label>
+                <select id="course" name="course" required>
+                    <option value="">Select Course</option>
+                    {% for course in courses %}
+                        <option value="{{ course.id }}" data-department="{{ course.department.id }}">{{ course.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="purpose">Purpose:</label>
+                <select id="purpose" name="purpose" required>
+                    <option value="enquiry">For Enquiry</option>
+                    <option value="order">Place Order</option>
+                    <option value="return">Return</option>
+                </select>
+
+                <label>Materials Provide:</label><br>
+                <input type="checkbox" id="notebook" name="materials" value="notebook">
+                <label for="notebook">Debit Note Book</label><br>
+                <input type="checkbox" id="pen" name="materials" value="pen">
+                <label for="pen">Pen</label><br>
+                <input type="checkbox" id="papers" name="materials" value="papers">
+                <label for="papers">Exam Papers</label><br>
+
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <button id="logoutButton" type="button" onclick="logout()" class="btn btn-danger">Logout</button>
+            </form>
+            <div id="confirmationMessage" style="display: none;">
+                <p id="confirmationText"></p>
+                <a href="{% url 'home' %}" class="btn btn-success">Return to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("showFormButton").addEventListener("click", function () {
+            var formContainer = document.getElementById("formContainer");
+            formContainer.style.display = "block";
+        });
+
+        var departmentDropdown = document.getElementById("department");
+        var courseDropdown = document.getElementById("course");
+        var courseOptions = courseDropdown.innerHTML;
+
+        departmentDropdown.addEventListener("change", function () {
+            var selectedDepartmentId = this.value;
+            courseDropdown.innerHTML = courseOptions;
+
+            var options = courseDropdown.querySelectorAll("option");
+            options.forEach(function (option) {
+                var departmentId = option.getAttribute("data-department");
+                if (departmentId && departmentId !== selectedDepartmentId) {
+                    option.style.display = "none";
+                } else {
+                    option.style.display = "block";
+                }
+            });
+        });
+
+        document.getElementById("orderForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent the default form submission
+            var confirmationMessage = document.getElementById("confirmationMessage");
+            var confirmationText = document.getElementById("confirmationText");
+            confirmationText.innerText = "Order Confirmed"; // Set the confirmation message
+            confirmationMessage.style.display = "block"; // Show the confirmation message
+            var formContainer = document.getElementById("formContainer");
+            //formContainer.style.display = "none";
+        });
+
+        function logout() {
+            window.location.href = "{% url 'home' %}";
+        }
+    </script>
+</body>
+</html>
+{% endblock %}

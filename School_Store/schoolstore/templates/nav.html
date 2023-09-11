@@ -1,0 +1,96 @@
+<style>
+    /* Custom styles for "Hello Username" */
+    .hello-text {
+        font-weight: bold;
+        color: #150526; /* Blue color, you can adjust this */
+    }
+
+    /* Custom styles for the "Logout" link */
+    .logout-link {
+        color: #ff0000; /* Red color, you can adjust this */
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+    .logout-link:hover {
+        text-decoration: underline; /* Add underline on hover */
+    }
+</style>
+
+<!-- nav.html -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+        aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav">
+            <li class="nav-item active">
+                <a class="nav-link" href="{% url 'home' %}">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'login' %}">Login</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'register' %}">Register</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="departmentDropdown" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                    Department
+                </a>
+                <div class="dropdown-menu" aria-labelledby="departmentDropdown">
+                    {% for department in departments %}
+                        <a class="dropdown-item" href="{{ department.wikipedia_link }}" onclick="loadCourses({{ department.id }})">
+                            {{ department.name }}
+                        </a>
+                        <div id="coursesDropdown{{ department.id }}"></div>
+                    {% endfor %}
+                </div>
+            </li>
+        </ul>
+    </div>
+    {% if user.is_authenticated %}
+    <div class="navbar-text ml-3">
+        <span class="hello-text">Hello {{ user.first_name }}</span>
+    </div>
+    <li class="nav-item ml-3">
+        <a class="btn btn-primary" href="{% url 'order_now' %}">Order Now</a>
+    </li>
+    <a class="nav-link logout-link" href="{% url 'logout' %}">Logout</a>
+    {% endif %}
+</nav>
+
+
+<!-- JavaScript -->
+<script>
+    function loadCourses(departmentId) {
+        // Make an AJAX request to fetch courses for the selected department
+        var url = `/get_courses?department_id=${departmentId}`; // Replace with your Django view URL
+
+        // Perform an AJAX request
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                // Create a sub-dropdown menu for courses
+                var courseDropdown = document.createElement('div');
+                courseDropdown.classList.add('dropdown-menu', 'sub-menu');
+                courseDropdown.setAttribute('aria-labelledby', 'departmentDropdown');
+
+                data.courses.forEach(course => {
+                    var courseLink = document.createElement('a');
+                    courseLink.classList.add('dropdown-item');
+                    courseLink.href = '/course/' + course.id + '/'; // Replace with the actual course URL pattern
+                    courseLink.textContent = course.name;
+                    courseDropdown.appendChild(courseLink);
+                });
+
+                var departmentDropdownMenu = document.getElementById('coursesDropdown' + departmentId);
+                departmentDropdownMenu.innerHTML = '';
+                departmentDropdownMenu.appendChild(courseDropdown);
+            })
+            .catch(error => {
+                console.error('Error fetching courses:', error);
+            });
+    }
+</script>
